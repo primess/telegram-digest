@@ -79,6 +79,7 @@ _SCHEMA = [
         run_id text not null,
         call_id text not null,
         model text not null,
+        purpose text not null default '',
         input_tokens integer not null,
         output_tokens integer not null,
         est_cost_usd real not null,

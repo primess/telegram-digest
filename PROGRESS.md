@@ -39,6 +39,17 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (17 tests).
 - Spec proof: `tests/unit/test_scorer.py` covers §8.4 scoring and §8.5 selection first pass.
 
+## Stage 5 — LLM accounting + budget enforcer
+
+- [x] S5-T1 — Accounting wrapper. Acceptance: tests prove LLM calls record `(run_id, model, purpose, input_tokens, output_tokens, cost, ts)` to SQLite. Status: done. Notes: implemented `tg_digest.llm.accounting.AccountedLLM`.
+- [x] S5-T2 — Per-run hard stop. Acceptance: tests prove budget is checked before LLM call, no usage is recorded after refused call, and checkpoint is exposed. Status: done. Notes: implemented `BudgetEnforcer`/`BudgetExceeded`; subscription-window calibration still future.
+
+### Stage 5 gate summary — 2026-04-24T13:31Z
+
+- Commands run: `pytest -q`, `ruff check .`, `mypy src`.
+- Result: all green (19 tests).
+- Spec proof: `tests/unit/test_llm_accounting.py` covers §11.1 accounting and §11.3 hard-stop-before-call checkpoint behavior first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
