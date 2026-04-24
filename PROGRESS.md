@@ -60,6 +60,17 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (20 tests; fake E2E green).
 - Spec proof: `tests/unit/test_summariser.py` covers §8.6 selected-item summarisation first pass.
 
+## Stage 7 — Digest assembly + digest-index
+
+- [x] S7-T1 — Digest assembler. Acceptance: tests prove assembled digest dict includes §8.7 top-level fields plus item kind/score/reason/source/link/deeplink/flags. Status: done. Notes: implemented `tg_digest.digest.assembly.DigestAssembler`.
+- [x] S7-T2 — Digest-index persistence. Acceptance: tests prove digest items persist in SQLite and resolve by callback `item_id`. Status: done. Notes: implemented `DigestIndexStore`.
+
+### Stage 7 gate summary — 2026-04-24
+
+- Commands run: `pytest -q`, `ruff check .`, `mypy src`.
+- Result: all green (22 tests).
+- Spec proof: `tests/unit/test_digest_assembly.py` covers §8.7 digest object shape and §7/§10 callback item resolution support.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
