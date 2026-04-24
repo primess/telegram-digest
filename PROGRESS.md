@@ -14,8 +14,8 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 
 ## Stage 2 — Testbed
 
-- [ ] S2-T1 — Protocols and fakes. Acceptance: FakeReader/FakeLLM/FakeBot/ClockFake/BudgetSimulator import and support placeholder E2E. Status: todo.
-- [ ] S2-T2 — Placeholder fake E2E. Acceptance: `pytest -m e2e` produces digest-shaped object without network. Status: todo.
+- [x] S2-T1 — Protocols and fakes. Acceptance: FakeReader/FakeLLM/FakeBot/ClockFake/BudgetSimulator import and support placeholder E2E. Status: done. Notes: implemented `tg_digest.types` and `tg_digest.testbed.fakes`.
+- [x] S2-T2 — Placeholder fake E2E. Acceptance: `pytest -m e2e` produces digest-shaped object without network. Status: done. Notes: implemented `tg_digest.pipeline.fake_pipeline`; artifact written by FakeBot.
 
 ## Live endpoint gates
 
@@ -36,3 +36,10 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Commands run: `pytest -q`, `ruff check .`, `mypy src`.
 - Result: all green (8 tests).
 - Spec proof: source config tests cover §6 allowlist validation safety; storage bootstrap tests cover §12 runtime layout/tables.
+
+
+### Stage 2 gate summary — 2026-04-24T13:18Z
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (13 tests; fake E2E green).
+- Spec proof: fakes from §22.3 exist in first pass and E2E proves a no-network digest-shaped object can be produced before any live endpoint.
