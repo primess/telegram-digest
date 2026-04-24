@@ -71,6 +71,16 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (22 tests).
 - Spec proof: `tests/unit/test_digest_assembly.py` covers §8.7 digest object shape and §7/§10 callback item resolution support.
 
+## Stage 8 — Delivery rendering
+
+- [x] S8-T1 — Telegram digest renderer. Acceptance: tests prove rendered digest includes item headers, summaries, links/deeplinks, feedback affordance text, final counts/cost stats, and splits under the Telegram message cap at item boundaries. Status: done. Notes: implemented `tg_digest.delivery.render.TelegramDigestRenderer`; real bot process/buttons still future.
+
+### Stage 8 gate summary — 2026-04-24
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (23 tests; fake E2E green).
+- Spec proof: `tests/unit/test_delivery_render.py` covers §9.2 digest message formatting first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
