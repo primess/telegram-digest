@@ -81,6 +81,17 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (23 tests; fake E2E green).
 - Spec proof: `tests/unit/test_delivery_render.py` covers §9.2 digest message formatting first pass.
 
+## Stage 9 — Feedback processor + slash cmds
+
+- [x] S9-T1 — Button feedback processor. Acceptance: tests prove `more` updates source/topic prefs and writes `feedback_log`; mute signal path exists. Status: done. Notes: implemented `tg_digest.feedback.processor.FeedbackProcessor.ingest_button`.
+- [x] S9-T2 — Slash command skeleton. Acceptance: tests prove `/mute`, `/unmute`, `/topic`, `/topics`, `/sources`, `/prefs export`, `/prefs reset`, `/cost`, and `/dryrun` return command results and mutate prefs where appropriate. Status: done. Notes: real bot command wiring remains future.
+
+### Stage 9 gate summary — 2026-04-24
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (27 tests; fake E2E green).
+- Spec proof: `tests/unit/test_feedback_processor.py` covers §10.1 feedback signals and most §10.2 command semantics first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
