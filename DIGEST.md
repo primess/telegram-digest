@@ -10,18 +10,19 @@
 - Testbed first pass: `FakeReader`, `FakeLLM`, `FakeBot`, `ClockFake`, `BudgetSimulator`.
 - Shared dataclasses in `tg_digest.types`.
 - Placeholder no-network fake pipeline in `tg_digest.pipeline.fake_pipeline`.
+- Filter/cluster module: deterministic text normalization, URL/emoji stripping, language heuristic, blacklist/exact-dedup filtering, shingled Jaccard clustering, representative selection, traction count.
 - State docs exist and are current: `PROGRESS.md`, `DIGEST.md`, `DECISIONS.md`.
 
 ## Tested
 
-- `. .venv/bin/activate && pytest -q` passes (13 tests).
+- `. .venv/bin/activate && pytest -q` passes (15 tests).
 - `. .venv/bin/activate && pytest -m e2e -q` passes.
 - `. .venv/bin/activate && ruff check .` passes.
 - `. .venv/bin/activate && mypy src` passes.
 
 ## Next
 
-Stage 3: implement deterministic filter + cluster module using strict TDD. Start with `RawMessage` filtering for min chars, language allowlist, blacklist, exact duplicate hash, then add deterministic similarity clustering.
+Stage 4: implement scorer + selector using strict TDD. Start with weighted score components over clusters, then selection percentage math and exploration slots.
 
 ## Open
 

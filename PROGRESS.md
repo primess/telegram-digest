@@ -17,6 +17,17 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - [x] S2-T1 — Protocols and fakes. Acceptance: FakeReader/FakeLLM/FakeBot/ClockFake/BudgetSimulator import and support placeholder E2E. Status: done. Notes: implemented `tg_digest.types` and `tg_digest.testbed.fakes`.
 - [x] S2-T2 — Placeholder fake E2E. Acceptance: `pytest -m e2e` produces digest-shaped object without network. Status: done. Notes: implemented `tg_digest.pipeline.fake_pipeline`; artifact written by FakeBot.
 
+## Stage 3 — Filter + cluster
+
+- [x] S3-T1 — Deterministic pre-filter. Acceptance: tests prove near-empty, pure empty media text, language mismatch, blacklist, and exact duplicate drops. Status: done. Notes: implemented `FilterCluster.filter`.
+- [x] S3-T2 — Deterministic similarity clustering. Acceptance: tests prove similar messages are grouped, representative is longest, traction counts cluster size. Status: done. Notes: implemented shingled Jaccard clustering.
+
+### Stage 3 gate summary — 2026-04-24T13:22Z
+
+- Commands run: `pytest -q`, `ruff check .`, `mypy src`.
+- Result: all green (15 tests).
+- Spec proof: `tests/unit/test_filter_cluster.py` covers §8.2 pre-filter and §8.3 deterministic clustering first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
