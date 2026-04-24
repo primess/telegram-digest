@@ -28,6 +28,17 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (15 tests).
 - Spec proof: `tests/unit/test_filter_cluster.py` covers §8.2 pre-filter and §8.3 deterministic clustering first pass.
 
+## Stage 4 — Scorer + selector
+
+- [x] S4-T1 — Weighted scorer. Acceptance: tests prove source, topic, keyword, traction, and length components contribute to score and reason text. Status: done. Notes: implemented `tg_digest.scorer.core.Scorer.score`.
+- [x] S4-T2 — Selector math. Acceptance: tests prove known percentage, floor, cap, and exploration slot selection. Status: done. Notes: implemented `Scorer.select`; optional LLM tie-breaker still deferred.
+
+### Stage 4 gate summary — 2026-04-24T13:26Z
+
+- Commands run: `pytest -q`, `ruff check .`, `mypy src`.
+- Result: all green (17 tests).
+- Spec proof: `tests/unit/test_scorer.py` covers §8.4 scoring and §8.5 selection first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.

@@ -11,21 +11,23 @@
 - Shared dataclasses in `tg_digest.types`.
 - Placeholder no-network fake pipeline in `tg_digest.pipeline.fake_pipeline`.
 - Filter/cluster module: deterministic text normalization, URL/emoji stripping, language heuristic, blacklist/exact-dedup filtering, shingled Jaccard clustering, representative selection, traction count.
+- Scorer/selector module: weighted deterministic score, selection reason strings, percentage/floor/cap selection, exploration slot picking by novelty/traction.
 - State docs exist and are current: `PROGRESS.md`, `DIGEST.md`, `DECISIONS.md`.
 
 ## Tested
 
-- `. .venv/bin/activate && pytest -q` passes (15 tests).
+- `. .venv/bin/activate && pytest -q` passes (17 tests).
 - `. .venv/bin/activate && pytest -m e2e -q` passes.
 - `. .venv/bin/activate && ruff check .` passes.
 - `. .venv/bin/activate && mypy src` passes.
 
 ## Next
 
-Stage 4: implement scorer + selector using strict TDD. Start with weighted score components over clusters, then selection percentage math and exploration slots.
+Stage 5: implement LLM accounting + budget enforcer with hard-stop/checkpoint behavior using strict TDD and `BudgetSimulator` patterns.
 
 ## Open
 
 - Full chat SPEC could not be found on disk at the Telegram cache path inside this runtime; repo `SPEC.md` currently has a placeholder.
+- Optional cheap-LLM tie-breaker in §8.4 is not built yet.
 - No live Telegram/BotFather access is authorised or implemented.
 - Must keep updating `PROGRESS.md` after each task and `DIGEST.md` at each stage gate.
