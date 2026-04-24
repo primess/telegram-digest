@@ -9,8 +9,8 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 
 ## Stage 1 — Config + storage
 
-- [ ] S1-T1 — Config models and YAML loaders. Acceptance: tests prove defaults, source validation, duplicate refusal, topic_id requirement, private/1:1 refusal. Status: todo. Notes: not started.
-- [ ] S1-T2 — SQLite schema/bootstrap. Acceptance: tests prove required tables exist and runtime directories/permissions are created. Status: todo. Notes: not started.
+- [x] S1-T1 — Config models and YAML loaders. Acceptance: tests prove defaults, source validation, duplicate refusal, topic_id requirement, private/1:1 refusal. Status: done. Notes: `tests/unit/test_sources_config.py`; implemented `tg_digest.config.sources`.
+- [x] S1-T2 — SQLite schema/bootstrap. Acceptance: tests prove required tables exist and runtime directories/permissions are created. Status: done. Notes: `tests/unit/test_storage_bootstrap.py`; implemented `tg_digest.storage.bootstrap`.
 
 ## Stage 2 — Testbed
 
@@ -29,3 +29,10 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Commands run: `pytest -q`, `ruff check .`, `mypy src`.
 - Result: all green.
 - Spec proof: `tests/unit/test_cli.py::test_version_command_prints_package_version` proves package entrypoint wiring.
+
+
+### Stage 1 gate summary — 2026-04-24T13:13Z
+
+- Commands run: `pytest -q`, `ruff check .`, `mypy src`.
+- Result: all green (8 tests).
+- Spec proof: source config tests cover §6 allowlist validation safety; storage bootstrap tests cover §12 runtime layout/tables.
