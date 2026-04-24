@@ -50,6 +50,16 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (19 tests).
 - Spec proof: `tests/unit/test_llm_accounting.py` covers §11.1 accounting and §11.3 hard-stop-before-call checkpoint behavior first pass.
 
+## Stage 6 — Summariser
+
+- [x] S6-T1 — FakeLLM summariser. Acceptance: tests prove selected scored clusters become digest items with stable ids, summaries, links, source ids, and Telegram deeplinks. Status: done. Notes: implemented `tg_digest.summariser.core.Summariser`; real Anthropic/cassette path still future.
+
+### Stage 6 gate summary — 2026-04-24T13:35Z
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (20 tests; fake E2E green).
+- Spec proof: `tests/unit/test_summariser.py` covers §8.6 selected-item summarisation first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
