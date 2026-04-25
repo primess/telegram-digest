@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from tg_digest.filter_cluster.core import Cluster
@@ -41,8 +42,13 @@ class ScoredCluster:
 
 
 class Scorer:
-    def __init__(self, weights: ScoringWeights | None = None) -> None:
+    def __init__(
+        self,
+        weights: ScoringWeights | None = None,
+        tie_breaker: Callable[[ScoredCluster], float] | None = None,
+    ) -> None:
         self.weights = weights or ScoringWeights()
+        self.tie_breaker = tie_breaker
 
     def score(self, clusters: list[Cluster], ctx: ScoringContext) -> list[ScoredCluster]:
         if not clusters:
@@ -93,7 +99,7 @@ class Scorer:
             exploration_count = 1
         known_count = total_target - exploration_count
 
-        by_score = sorted(scored, key=lambda item: item.score, reverse=True)
+        by_score = sorted(scored, key=self._selection_key, reverse=True)
         selected_known = by_score[:known_count]
         selected_ids = {id(item) for item in selected_known}
         exploration_pool = [item for item in scored if id(item) not in selected_ids]
@@ -112,6 +118,10 @@ class Scorer:
             for item in exploration_pool[:exploration_count]
         ]
         return selected_known + selected_exploration
+
+    def _selection_key(self, item: ScoredCluster) -> tuple[float, float]:
+        tiebreak = 0.0 if self.tie_breaker is None else self.tie_breaker(item)
+        return (item.score, tiebreak)
 
 
 def clamp01(value: float) -> float:

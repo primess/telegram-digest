@@ -103,6 +103,29 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (32 tests; fake E2E green; 27 source files type-check).
 - Spec proof: `tests/unit/test_preference_learning.py` and feedback processor regression coverage prove Stage 10 preference-learning/review first pass.
 
+## Stage 11 — CLI dry-run/cost/status workflow
+
+- [x] S11-T1 — No-network dry run CLI. Acceptance: tests prove `tg-digest dryrun` can run from fixture/built-in sample, persist `run_log`/`digest_index`/`llm_usage`, and write a local artifact without Telegram/network. Status: done. Notes: implemented in `tg_digest.cli` around fakes and `AccountedLLM`.
+- [x] S11-T2 — Runtime status/cost CLI. Acceptance: tests prove `tg-digest status` reports runtime state and `tg-digest cost` reports token/cost totals from SQLite. Status: done. Notes: `tests/unit/test_cli_runtime.py`.
+
+### Stage 11 gate summary — 2026-04-25T20:53Z
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (42 tests; fake E2E green; 31 source files type-check).
+- Spec proof: `tests/unit/test_cli_runtime.py` covers no-network CLI dry-run/cost/status behavior.
+
+## Stage 12/13 — Live integration seams without live access
+
+- [x] S12-T1 — Telegram reader safety gate. Acceptance: tests prove non-empty allowlist required, private/1:1 sources refused, mark-as-read/media downloads default false, and live reader construction is blocked until authorisation. Status: done. Notes: implemented `tg_digest.integrations.telegram_reader` with lazy Telethon import only after gate.
+- [x] S13-T1 — Bot dispatcher seam. Acceptance: tests prove callback data routes to feedback processor, malformed callbacks are rejected, and slash commands reuse command semantics without network. Status: done. Notes: implemented `tg_digest.bot.dispatcher`.
+- [x] S13-T2 — Optional scorer tie-breaker. Acceptance: tests prove equal-score known items can be ordered by a deterministic cheap tie-breaker seam. Status: done. Notes: implemented optional `Scorer(tie_breaker=...)`.
+
+### Stage 12/13 gate summary — 2026-04-25T20:53Z
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (42 tests; fake E2E green; 31 source files type-check).
+- Spec proof: `tests/unit/test_telegram_reader_integration.py`, `tests/unit/test_bot_dispatcher.py`, and `tests/unit/test_scorer_tiebreaker.py` cover live-safety seams while keeping live endpoint gates closed.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
