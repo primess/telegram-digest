@@ -6,24 +6,27 @@ from tg_digest.feedback.processor import FeedbackProcessor
 from tg_digest.storage.bootstrap import bootstrap_home
 
 
-def seed_digest_item(db_path: Path) -> None:
+def seed_digest_item(
+    db_path: Path, *, item_id: str = "d2604-01", kind: str = "known"
+) -> None:
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """insert into digest_index
             (item_id, digest_id, item_json, created_at, expires_at)
             values (?, ?, ?, ?, ?)""",
             (
-                "d2604-01",
+                item_id,
                 "d2604",
                 json.dumps(
                     {
-                        "item_id": "d2604-01",
+                        "item_id": item_id,
                         "source_ids": ["boi"],
                         "summary": "Rates update",
                         "links": [],
                         "telegram_deeplinks": [],
                         "flags": [],
                         "topics": ["markets"],
+                        "kind": kind,
                     }
                 ),
                 "2026-04-24T09:00:00+03:00",
@@ -51,6 +54,24 @@ def test_button_more_updates_source_topic_and_feedback_log(tmp_path: Path) -> No
     assert source_weight > 0
     assert topic_weight > 0
     assert signal == "more"
+
+
+def test_exploration_less_button_uses_damped_preference_learning(tmp_path: Path) -> None:
+    db_path = bootstrap_home(tmp_path / "home")
+    seed_digest_item(db_path, item_id="explore-01", kind="exploration")
+    processor = FeedbackProcessor(db_path)
+
+    processor.ingest_button("explore-01", "less", user_id=123)
+
+    with sqlite3.connect(db_path) as conn:
+        source_weight = conn.execute(
+            "select weight from pref_sources where source_id = 'boi'"
+        ).fetchone()[0]
+        topic_weight = conn.execute(
+            "select weight from pref_topics where topic = 'markets'"
+        ).fetchone()[0]
+    assert source_weight == -0.3
+    assert topic_weight == -0.3
 
 
 def test_mute_command_sets_muted_until_and_unmute_clears_it(tmp_path: Path) -> None:

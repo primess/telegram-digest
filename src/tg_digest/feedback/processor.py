@@ -3,7 +3,9 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
+
+from tg_digest.learning.preferences import FeedbackSignal, PreferenceLearner
 
 
 @dataclass(frozen=True)
@@ -18,15 +20,20 @@ class FeedbackProcessor:
     def ingest_button(self, item_id: str, signal: str, user_id: int) -> None:
         del user_id
         item = self._resolve_item(item_id)
-        multiplier = 1.0 if signal == "more" else -1.0 if signal == "less" else 0.0
+        direction = 1.0 if signal == "more" else -1.0 if signal == "less" else 0.0
         if signal == "mute_source":
             for source_id in item.get("source_ids", []):
                 self._mute_source(str(source_id), days=7)
-        elif multiplier != 0.0:
-            for source_id in item.get("source_ids", []):
-                self._nudge_source(str(source_id), 0.2 * multiplier)
-            for topic in item.get("topics", []):
-                self._nudge_topic(str(topic), 0.2 * multiplier)
+        elif direction != 0.0:
+            item_kind = "exploration" if item.get("kind") == "exploration" else "known"
+            PreferenceLearner(self.db_path).apply(
+                FeedbackSignal(
+                    source_ids=[str(source_id) for source_id in item.get("source_ids", [])],
+                    topics=[str(topic) for topic in item.get("topics", [])],
+                    direction=direction,
+                    item_kind=cast(Literal["known", "exploration"], item_kind),
+                )
+            )
         self._log_feedback(item_id, signal)
 
     def ingest_command(self, cmd: str, user_id: int) -> CommandResult:

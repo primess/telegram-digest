@@ -92,6 +92,17 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 - Result: all green (27 tests; fake E2E green).
 - Spec proof: `tests/unit/test_feedback_processor.py` covers §10.1 feedback signals and most §10.2 command semantics first pass.
 
+## Stage 10 — Preference learning + daily review
+
+- [x] S10-T1 — EMA preference learning utilities. Acceptance: tests prove half-life alpha/update math and feedback signals update source/topic weights. Status: done. Notes: implemented `tg_digest.learning.preferences`.
+- [x] S10-T2 — Exploration damping and review sampling. Acceptance: tests prove exploration negative feedback is damped by ×0.3, positive exploration feedback is not damped, known negative feedback is not damped, button feedback uses the learner, and ignored recent digest items are sampled for daily review. Status: done. Notes: `ReviewSampler.sample_ignored_recent` excludes items already present in `feedback_log`.
+
+### Stage 10 gate summary — 2026-04-25T20:45Z
+
+- Commands run: `pytest -q`, `pytest -m e2e -q`, `ruff check .`, `mypy src`.
+- Result: all green (32 tests; fake E2E green; 27 source files type-check).
+- Spec proof: `tests/unit/test_preference_learning.py` and feedback processor regression coverage prove Stage 10 preference-learning/review first pass.
+
 ## Live endpoint gates
 
 - [ ] User authorised Stage 12 real-Telegram smoke.
