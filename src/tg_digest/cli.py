@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -6,10 +7,11 @@ from typing import Annotated
 
 import typer
 
+from tg_digest.integrations.telegram_reader import TelegramReaderConfig
 from tg_digest.llm.accounting import AccountedLLM, BudgetEnforcer, BudgetLimits
 from tg_digest.storage.bootstrap import bootstrap_home
 from tg_digest.testbed.fakes import FakeBot, FakeLLM, FakeReader
-from tg_digest.types import Digest, DigestItem, Prompt
+from tg_digest.types import Digest, DigestItem, Prompt, RawMessage
 
 app = typer.Typer(help="Local read-only Telegram digest pipeline.")
 
@@ -94,6 +96,73 @@ def cost(
         "Cost: "
         f"input_tokens={int(row[0])} output_tokens={int(row[1])} "
         f"cost_usd_est={float(row[2]):.6f}"
+    )
+
+
+@app.command("telegram-smoke")
+def telegram_smoke(
+    allow_source: Annotated[
+        list[str],
+        typer.Option(help="Explicitly allowlisted Telegram source handle; repeatable."),
+    ],
+    api_id: Annotated[
+        int | None,
+        typer.Option(help="Telegram API ID. Falls back to TG_DIGEST_API_ID/TELEGRAM_API_ID."),
+    ] = None,
+    api_hash: Annotated[
+        str | None,
+        typer.Option(help="Telegram API hash. Falls back to TG_DIGEST_API_HASH/TELEGRAM_API_HASH."),
+    ] = None,
+    session_path: Annotated[
+        Path | None,
+        typer.Option(help="Telethon session path for the read-only smoke."),
+    ] = None,
+    limit_per_source: Annotated[
+        int,
+        typer.Option(help="Maximum recent messages to read per allowlisted source."),
+    ] = 3,
+    artifact: Annotated[
+        Path,
+        typer.Option(help="JSONL artifact path for fetched message metadata/text."),
+    ] = Path(".tg-digest/artifacts/telegram-smoke.jsonl"),
+    i_authorize_live_read: Annotated[
+        bool,
+        typer.Option(help="Required explicit gate for live Telegram read access."),
+    ] = False,
+    fixture_client: Annotated[
+        Path | None,
+        typer.Option(help="Test-only JSONL fixture client; avoids network."),
+    ] = None,
+) -> None:
+    """Run a tiny read-only Telegram reader smoke against explicit allowlisted sources."""
+
+    if not i_authorize_live_read:
+        typer.echo("telegram-smoke requires --i-authorize-live-read")
+        raise typer.Exit(1)
+    api_id = api_id or _env_int("TG_DIGEST_API_ID") or _env_int("TELEGRAM_API_ID")
+    api_hash = api_hash or os.getenv("TG_DIGEST_API_HASH") or os.getenv("TELEGRAM_API_HASH")
+    if api_id is None or not api_hash:
+        typer.echo("Missing Telegram API credentials: set TG_DIGEST_API_ID and TG_DIGEST_API_HASH")
+        raise typer.Exit(1)
+
+    config = TelegramReaderConfig(
+        api_id=api_id,
+        api_hash=api_hash,
+        allowed_sources=allow_source,
+        session_path=session_path,
+        mark_as_read=False,
+        download_media=False,
+    )
+    if fixture_client is not None:
+        messages = _read_fixture_messages(fixture_client, allow_source, limit_per_source)
+    else:
+        messages = config.build_live_reader(authorised=True).fetch_recent(
+            limit_per_source=limit_per_source
+        )
+    _write_jsonl_artifact(artifact, messages)
+    typer.echo(
+        "Telegram read-only smoke complete: "
+        f"sources={len(allow_source)} messages={len(messages)} artifact={artifact}"
     )
 
 
@@ -217,3 +286,59 @@ def _write_builtin_fixture(home: Path, run_id: str) -> Path:
         + "\n"
     )
     return path
+
+
+def _env_int(name: str) -> int | None:
+    value = os.getenv(name)
+    if not value:
+        return None
+    return int(value)
+
+
+def _read_fixture_messages(
+    path: Path, allow_sources: list[str], limit_per_source: int
+) -> list[RawMessage]:
+    source_ids = {_source_to_id(source) for source in allow_sources}
+    counts = {source_id: 0 for source_id in source_ids}
+    messages: list[RawMessage] = []
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        data = json.loads(line)
+        source_id = str(data["source_id"])
+        if source_id not in source_ids or counts[source_id] >= limit_per_source:
+            continue
+        counts[source_id] += 1
+        messages.append(
+            RawMessage(
+                source_id=source_id,
+                msg_id=int(data["msg_id"]),
+                date=str(data["date"]),
+                text=str(data["text"]),
+                links=list(data.get("links", [])),
+            )
+        )
+    return messages
+
+
+def _source_to_id(source: str) -> str:
+    return source.removeprefix("@").replace("/", "_").replace("-", "_")
+
+
+def _write_jsonl_artifact(path: Path, messages: list[RawMessage]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        json.dumps(
+            {
+                "source_id": message.source_id,
+                "msg_id": message.msg_id,
+                "date": message.date,
+                "text": message.text,
+                "links": message.links,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        for message in messages
+    ]
+    path.write_text("\n".join(lines) + ("\n" if lines else ""))

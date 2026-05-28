@@ -128,7 +128,7 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 
 ## Live endpoint gates
 
-- [ ] User authorised Stage 12 real-Telegram smoke.
+- [x] User authorised Stage 12 real-Telegram smoke. Status: command implemented; real run pending credentials/source allowlist.
 - [ ] User authorised Stage 13 real-bot smoke.
 - [ ] User authorised Stage 14 Hermes integration.
 

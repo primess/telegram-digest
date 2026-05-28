@@ -25,7 +25,7 @@
 - Feedback processor first pass: button signals update prefs/logs; slash command skeleton covers mute/unmute/topic/topics/sources/prefs/cost/dryrun/digest/status.
 - Preference learning/review first pass: EMA half-life utilities, feedback application to source/topic prefs, exploration negative-signal damping, positive exploration non-damping, and ignored-recent review sampling.
 - CLI runtime first pass: `dryrun`, `status`, and `cost` commands run no-network fixture/fake flows, persist run/digest/usage state, and produce local artifacts.
-- Live integration seams first pass: Telegram reader config validation/live gate, lazy Telethon adapter, pure bot callback/command dispatcher, and optional scorer tie-breaker.
+- Live integration seams first pass: Telegram reader config validation/live gate, lazy Telethon adapter, read-only recent-message smoke CLI (`telegram-smoke`), pure bot callback/command dispatcher, and optional scorer tie-breaker.
 - State docs exist and are current: `PROGRESS.md`, `DIGEST.md`, `DECISIONS.md`.
 
 ## Tested
@@ -44,7 +44,7 @@ Stage 14/15: Hermes scheduling integration and final handover docs. Live Telegra
 - Full chat SPEC could not be found on disk at the Telegram cache path inside this runtime; repo `SPEC.md` currently has a placeholder.
 - Real Anthropic SDK is not built yet; current LLM path remains fake/accounted only.
 - Subscription-window budget calibration is not implemented yet; current budget enforcer covers per-run caps.
-- Live Telegram smoke tests, Hermes scheduling integration, and final docs/handover remain pending.
+- Stage 12 live-reader smoke command is implemented, but a real run still needs Telegram API credentials and explicit allowlisted source handles.
+- Hermes scheduling integration and final docs/handover remain pending.
 - GitHub repo is public at `https://github.com/primess/telegram-digest`; HTTPS read/clone works in Hermes. SSH deploy-key write access is still not fixed in the sandbox, so this stage is committed locally only until SSH mount/permissions are resolved.
-- No live Telegram/BotFather access is authorised or implemented.
 - Must keep updating `PROGRESS.md` after each task and `DIGEST.md` at each stage gate.
