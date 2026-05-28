@@ -1,0 +1,11 @@
+version: 1
+defaults:
+  mark_as_read: never
+  language_hint: auto
+  enabled: true
+  weight: 1.0
+sources:
+  - id: hadshotiran
+    kind: channel
+    handle: "@hadshotiran"
+    language_hint: he

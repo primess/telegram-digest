@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from dotenv import load_dotenv
 
 from tg_digest.integrations.telegram_reader import TelegramReaderConfig
 from tg_digest.llm.accounting import AccountedLLM, BudgetEnforcer, BudgetLimits
@@ -136,6 +137,7 @@ def telegram_smoke(
 ) -> None:
     """Run a tiny read-only Telegram reader smoke against explicit allowlisted sources."""
 
+    load_dotenv()
     if not i_authorize_live_read:
         typer.echo("telegram-smoke requires --i-authorize-live-read")
         raise typer.Exit(1)

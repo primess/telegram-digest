@@ -6,4 +6,11 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Local runtime/secrets
+.env
+.env.*
+!.env.example
 .tg-digest/
+*.session
+*.session-journal

@@ -14,3 +14,8 @@ Stage 11-13 local implementation (2026-04-25T20:53Z):
 - Implemented CLI dryrun/status/cost using only local fixtures, fakes, SQLite, and local artifacts; no live Telegram endpoint touched.
 - Implemented Telegram reader and bot integration seams as safety-gated/no-network units because live endpoint gates are not authorised.
 - Added optional deterministic scorer tie-breaker seam instead of live cheap-LLM calls.
+
+Stage 12 live-smoke local configuration (2026-05-28):
+- Store Telegram API credentials only in local `.env`, which is git-ignored; commit only `.env.example`.
+- Allow `tg-digest telegram-smoke` to load `.env` automatically so the live smoke command does not need secrets on the command line.
+- Keep read-only source allowlist in `sources.yaml`; current smoke source is public channel `@hadshotiran`.
