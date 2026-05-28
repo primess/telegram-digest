@@ -8,9 +8,20 @@ from typing import Annotated
 import typer
 from dotenv import load_dotenv
 
+from tg_digest.config.sources import ResolvedSource, load_sources_config
+from tg_digest.filter_cluster.core import (
+    Cluster,
+    FilterCluster,
+    detect_language,
+    normalize_text,
+    strip_emoji,
+    strip_urls,
+)
 from tg_digest.integrations.telegram_reader import TelegramReaderConfig
 from tg_digest.llm.accounting import AccountedLLM, BudgetEnforcer, BudgetLimits
+from tg_digest.scorer.core import ScoredCluster, Scorer, ScoringContext, SelectBudget
 from tg_digest.storage.bootstrap import bootstrap_home
+from tg_digest.summariser.core import Summariser
 from tg_digest.testbed.fakes import FakeBot, FakeLLM, FakeReader
 from tg_digest.types import Digest, DigestItem, Prompt, RawMessage
 
@@ -100,6 +111,136 @@ def cost(
     )
 
 
+@app.command("run-once")
+def run_once(
+    sources: Annotated[Path, typer.Option(help="sources.yaml allowlist path.")] = Path(
+        "sources.yaml"
+    ),
+    home: Annotated[
+        Path,
+        typer.Option(help="Runtime home containing state.db, logs, and artifacts."),
+    ] = Path(".tg-digest"),
+    run_id: Annotated[str | None, typer.Option(help="Stable run id for tests/replay.")] = None,
+    api_id: Annotated[
+        int | None,
+        typer.Option(help="Telegram API ID. Falls back to TG_DIGEST_API_ID/TELEGRAM_API_ID."),
+    ] = None,
+    api_hash: Annotated[
+        str | None,
+        typer.Option(help="Telegram API hash. Falls back to TG_DIGEST_API_HASH/TELEGRAM_API_HASH."),
+    ] = None,
+    session_path: Annotated[
+        Path | None,
+        typer.Option(help="Telethon session path for live read-only runs."),
+    ] = None,
+    limit_per_source: Annotated[
+        int,
+        typer.Option(help="Maximum recent messages to read per enabled source."),
+    ] = 20,
+    select_floor: Annotated[int, typer.Option(help="Minimum items to select.")] = 5,
+    select_cap: Annotated[int, typer.Option(help="Maximum items to select.")] = 25,
+    i_authorize_live_read: Annotated[
+        bool,
+        typer.Option(help="Required explicit gate for live Telegram read access."),
+    ] = False,
+    fixture_client: Annotated[
+        Path | None,
+        typer.Option(help="Test-only JSONL fixture client; avoids network."),
+    ] = None,
+) -> None:
+    """Run one debuggable read/filter/score/summarise pass."""
+
+    load_dotenv()
+    run_id = run_id or "run-" + datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+    source_config = load_sources_config(sources)
+    enabled_sources = [source for source in source_config.sources if source.enabled]
+    handles = [source.handle for source in enabled_sources]
+    if not handles:
+        typer.echo("run-once requires at least one enabled source")
+        raise typer.Exit(1)
+
+    if fixture_client is not None:
+        fetched = _read_fixture_messages(fixture_client, handles, limit_per_source)
+    else:
+        if not i_authorize_live_read:
+            typer.echo("run-once live Telegram read requires --i-authorize-live-read")
+            raise typer.Exit(1)
+        api_id = api_id or _env_int("TG_DIGEST_API_ID") or _env_int("TELEGRAM_API_ID")
+        api_hash = api_hash or os.getenv("TG_DIGEST_API_HASH") or os.getenv("TELEGRAM_API_HASH")
+        if api_id is None or not api_hash:
+            typer.echo(
+                "Missing Telegram API credentials: set TG_DIGEST_API_ID and TG_DIGEST_API_HASH"
+            )
+            raise typer.Exit(1)
+        fetched = TelegramReaderConfig(
+            api_id=api_id,
+            api_hash=api_hash,
+            allowed_sources=handles,
+            session_path=session_path,
+            mark_as_read=False,
+            download_media=False,
+        ).build_live_reader(authorised=True).fetch_recent(limit_per_source=limit_per_source)
+
+    db_path = bootstrap_home(home)
+    filter_cluster = FilterCluster()
+    filtered = filter_cluster.filter(fetched)
+    clusters = filter_cluster.cluster(filtered)
+    ctx = _scoring_context(enabled_sources)
+    scorer = Scorer()
+    scored = scorer.score(clusters, ctx)
+    selected = scorer.select(
+        scored,
+        SelectBudget(floor=select_floor, cap=select_cap),
+    )
+    digest_items = Summariser(FakeLLM(), model="fake-echo").summarise(selected, digest_id=run_id)
+    digest = Digest(
+        digest_id=run_id,
+        generated_at=datetime.now(UTC).isoformat(),
+        counts={
+            "sources": len(enabled_sources),
+            "fetched": len(fetched),
+            "filtered": len(filtered),
+            "clusters": len(clusters),
+            "scored": len(scored),
+            "selected": len(selected),
+            "summarized": len(digest_items),
+        },
+        items=digest_items,
+    )
+    artifact_dir = home / "artifacts"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    digest_artifact = artifact_dir / f"digest-{run_id}.md"
+    debug_artifact = artifact_dir / f"run-{run_id}-debug.json"
+    digest_artifact.write_text(_render_markdown(digest))
+    debug_artifact.write_text(
+        json.dumps(
+            _run_debug_payload(
+                enabled_sources=enabled_sources,
+                fetched=fetched,
+                filtered=filtered,
+                clusters=clusters,
+                scored=scored,
+                selected=selected,
+                digest=digest,
+            ),
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
+    )
+    _store_digest_index(db_path, digest)
+    _record_run(db_path, run_id=run_id, digest=digest, status="run_once_complete")
+    typer.echo(
+        "Run once complete: "
+        f"run_id={run_id} sources={len(enabled_sources)} fetched={len(fetched)} "
+        f"filtered={len(filtered)} clusters={len(clusters)} scored={len(scored)} "
+        f"selected={len(selected)} summarized={len(digest_items)}"
+    )
+    typer.echo(f"Digest artifact: {digest_artifact}")
+    typer.echo(f"Debug artifact: {debug_artifact}")
+
+
 @app.command("telegram-smoke")
 def telegram_smoke(
     allow_source: Annotated[
@@ -166,6 +307,133 @@ def telegram_smoke(
         "Telegram read-only smoke complete: "
         f"sources={len(allow_source)} messages={len(messages)} artifact={artifact}"
     )
+
+
+def _scoring_context(sources: list[ResolvedSource]) -> ScoringContext:
+    source_topics = {_source_to_id(source.handle): source.topics for source in sources}
+    source_weights = {_source_to_id(source.handle): source.weight for source in sources}
+    topic_weights = {topic: 1.0 for source in sources for topic in source.topics}
+    keyword_weights = {
+        "breaking": 0.7,
+        "ברייקינג": 0.7,
+        "ai": 0.5,
+        "בינה": 0.5,
+        "איראן": 0.6,
+        "ישראל": 0.5,
+    }
+    return ScoringContext(
+        source_weights=source_weights,
+        topic_weights=topic_weights,
+        keyword_weights=keyword_weights,
+        source_topics=source_topics,
+    )
+
+
+def _run_debug_payload(
+    *,
+    enabled_sources: list[ResolvedSource],
+    fetched: list[RawMessage],
+    filtered: list[RawMessage],
+    clusters: list[Cluster],
+    scored: list[ScoredCluster],
+    selected: list[ScoredCluster],
+    digest: Digest,
+) -> dict[str, object]:
+    filtered_keys = {(message.source_id, message.msg_id) for message in filtered}
+    selected_keys = {
+        (item.cluster.representative.source_id, item.cluster.representative.msg_id)
+        for item in selected
+    }
+    return {
+        "counts": digest.counts,
+        "sources": [
+            {
+                "id": _source_to_id(source.handle),
+                "handle": source.handle,
+                "topics": source.topics,
+                "weight": source.weight,
+            }
+            for source in enabled_sources
+        ],
+        "fetching": {
+            "by_source": _message_counts_by_source(fetched),
+            "sample": [_message_debug(message) for message in fetched[:10]],
+        },
+        "filtering": {
+            "kept": [_message_debug(message) for message in filtered[:25]],
+            "dropped": [
+                {**_message_debug(message), "reason": _filter_drop_reason(message, fetched[:index])}
+                for index, message in enumerate(fetched)
+                if (message.source_id, message.msg_id) not in filtered_keys
+            ],
+        },
+        "clustering": [
+            {
+                "representative": _message_debug(cluster.representative),
+                "message_count": len(cluster.messages),
+                "traction": cluster.traction,
+                "message_ids": [message.msg_id for message in cluster.messages],
+            }
+            for cluster in clusters
+        ],
+        "scoring": {
+            "top": [
+                {
+                    "source_id": item.cluster.representative.source_id,
+                    "msg_id": item.cluster.representative.msg_id,
+                    "score": round(item.score, 4),
+                    "kind": item.kind,
+                    "selected": (
+                        item.cluster.representative.source_id,
+                        item.cluster.representative.msg_id,
+                    )
+                    in selected_keys,
+                    "reason": item.selection_reason,
+                    "text_preview": item.cluster.representative.text[:160],
+                }
+                for item in sorted(scored, key=lambda entry: entry.score, reverse=True)[:25]
+            ]
+        },
+        "summaries": [
+            {
+                "item_id": item.item_id,
+                "source_ids": item.source_ids,
+                "summary": item.summary,
+                "links": item.links,
+            }
+            for item in digest.items
+        ],
+    }
+
+
+def _message_counts_by_source(messages: list[RawMessage]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for message in messages:
+        counts[message.source_id] = counts.get(message.source_id, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _message_debug(message: RawMessage) -> dict[str, object]:
+    return {
+        "source_id": message.source_id,
+        "msg_id": message.msg_id,
+        "date": message.date,
+        "text_len": len(message.text),
+        "links": len(message.links),
+        "text_preview": message.text[:160],
+    }
+
+
+def _filter_drop_reason(message: RawMessage, previous: list[RawMessage]) -> str:
+    normalized = normalize_text(message.text)
+    text_without_urls = strip_urls(normalized)
+    if len(strip_emoji(text_without_urls).strip()) < 20:
+        return "too_short"
+    if detect_language(normalized) not in ["en", "he"]:
+        return "language"
+    if any(normalize_text(prev.text) == normalized for prev in previous):
+        return "exact_duplicate"
+    return "filtered"
 
 
 def _run_accounted_fake_digest(

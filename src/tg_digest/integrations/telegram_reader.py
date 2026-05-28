@@ -61,7 +61,7 @@ class TelethonReaderAdapter:
                 )
             else:
                 try:
-                    from telethon import TelegramClient  # type: ignore[import-not-found]
+                    from telethon import TelegramClient  # type: ignore[import-untyped]
                 except ImportError as exc:
                     raise RuntimeError(
                         "telethon is required for live Telegram reading; install the live extra."

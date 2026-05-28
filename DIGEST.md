@@ -44,7 +44,7 @@ Stage 14/15: Hermes scheduling integration and final handover docs. Live Telegra
 - Full chat SPEC could not be found on disk at the Telegram cache path inside this runtime; repo `SPEC.md` currently has a placeholder.
 - Real Anthropic SDK is not built yet; current LLM path remains fake/accounted only.
 - Subscription-window budget calibration is not implemented yet; current budget enforcer covers per-run caps.
-- Stage 12 live-reader smoke command is implemented, but a real run still needs Telegram API credentials and explicit allowlisted source handles.
-- Hermes scheduling integration and final docs/handover remain pending.
+- Stage 12 live-reader smoke command is implemented and real read-only smoke has succeeded.
+- Stage 14 debug `run-once` command exists for pre-scheduling inspection, but summarisation still uses FakeLLM and scheduler/delivery are not created yet.
 - GitHub repo is public at `https://github.com/primess/telegram-digest`; HTTPS read/clone works in Hermes. SSH deploy-key write access is still not fixed in the sandbox, so this stage is committed locally only until SSH mount/permissions are resolved.
 - Must keep updating `PROGRESS.md` after each task and `DIGEST.md` at each stage gate.

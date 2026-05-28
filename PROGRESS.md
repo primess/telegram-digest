@@ -130,7 +130,7 @@ All implementation work must be resumable from this file plus `DIGEST.md`.
 
 - [x] User authorised Stage 12 real-Telegram smoke. Status: command implemented; real run pending credentials/source allowlist.
 - [ ] User authorised Stage 13 real-bot smoke.
-- [ ] User authorised Stage 14 Hermes integration.
+- [x] User authorised Stage 14 Hermes integration. Status: requested delivery back to user on Telegram with Friday-sunset-to-Saturday-night quiet window; scheduling not created yet.
 
 
 ### Stage 0 gate summary — 2026-04-24T13:06Z

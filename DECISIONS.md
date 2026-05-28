@@ -19,3 +19,7 @@ Stage 12 live-smoke local configuration (2026-05-28):
 - Store Telegram API credentials only in local `.env`, which is git-ignored; commit only `.env.example`.
 - Allow `tg-digest telegram-smoke` to load `.env` automatically so the live smoke command does not need secrets on the command line.
 - Keep read-only source allowlist in `sources.yaml`; current smoke source is public channel `@hadshotiran`.
+
+Stage 14 debug run-once preparation (2026-05-28):
+- Added `tg-digest run-once` as a debuggable operational step before scheduling; it loads `sources.yaml`, fetches read-only messages, filters/clusters, scores/selects, fake-summarises, and writes digest/debug artifacts.
+- User requested Telegram delivery to self and a Friday-sunset-to-Saturday-night quiet window for the eventual schedule; do not create the cron job until the debug run outputs are accepted.
