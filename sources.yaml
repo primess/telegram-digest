@@ -5,7 +5,150 @@ defaults:
   enabled: true
   weight: 1.0
 sources:
+  # Tech
+  - id: techpicks
+    kind: channel
+    handle: "@techpicks"
+    topics: [Tech]
+    language_hint: he
+  - id: ai_tg_il
+    kind: channel
+    handle: "@AI_tg_il"
+    topics: [Tech]
+    language_hint: he
+  - id: geektimecoil
+    kind: channel
+    handle: "@geektimecoil"
+    topics: [Tech]
+    language_hint: he
+  - id: techjlm
+    kind: channel
+    handle: "@techjlm"
+    topics: [Tech]
+    language_hint: he
+  - id: techisrael
+    kind: channel
+    handle: "@techisrael"
+    topics: [Tech]
+    language_hint: he
+
+  # Middle East
+  - id: limoodiran
+    kind: channel
+    handle: "@limoodiran"
+    topics: [Middle East]
+    language_hint: he
+  - id: abualiexpress
+    kind: channel
+    handle: "@abualiexpress"
+    topics: [Middle East]
+    language_hint: he
   - id: hadshotiran
     kind: channel
     handle: "@hadshotiran"
+    topics: [Middle East]
+    language_hint: he
+  - id: bentzionm
+    kind: channel
+    handle: "@BenTzionM"
+    topics: [Middle East]
+    language_hint: he
+  - id: drmkedarhebrew
+    kind: channel
+    handle: "@drmkedarhebrew"
+    topics: [Middle East]
+    language_hint: he
+  - id: hakafot2
+    kind: channel
+    handle: "@hakafot2"
+    topics: [Middle East]
+    language_hint: he
+  - id: khalifa_shrugged
+    kind: channel
+    handle: "@khalifa_shrugged"
+    topics: [Middle East]
+    language_hint: he
+  - id: bardeaorg
+    kind: channel
+    handle: "@bardeaorg"
+    topics: [Middle East]
+    language_hint: he
+
+  # Israel News
+  - id: direct_polls
+    kind: channel
+    handle: "@Direct_Polls"
+    topics: [Israel News]
+    language_hint: he
+  - id: i24news_he_il
+    kind: channel
+    handle: "@i24NEWS_HE_IL"
+    topics: [Israel News]
+    language_hint: he
+  - id: amirbohbot
+    kind: channel
+    handle: "@amirbohbot"
+    topics: [Israel News]
+    language_hint: he
+  - id: modiinmuni
+    kind: channel
+    handle: "@modiinmuni"
+    topics: [Israel News]
+    language_hint: he
+  - id: amitsegal
+    kind: channel
+    handle: "@amitsegal"
+    topics: [Israel News]
+    language_hint: he
+  - id: politiklug
+    kind: channel
+    handle: "@politiklug"
+    topics: [Israel News]
+    language_hint: he
+  - id: calibernewsil
+    kind: channel
+    handle: "@CaliberNewsIL"
+    topics: [Israel News, Middle East]
+    language_hint: he
+
+  # Right
+  - id: adam_gold
+    kind: channel
+    handle: "@Adam_Gold"
+    topics: [Right]
+    language_hint: he
+  - id: lefaroll
+    kind: channel
+    handle: "@Lefaroll"
+    topics: [Right]
+    language_hint: he
+  - id: grinzaig
+    kind: channel
+    handle: "@grinzaig"
+    topics: [Right, Israel News]
+    language_hint: he
+  - id: eli_tsipori
+    kind: channel
+    handle: "@eli_tsipori"
+    topics: [Right]
+    language_hint: he
+  - id: shomersaf
+    kind: channel
+    handle: "@shomersaf"
+    topics: [Right]
+    language_hint: he
+  - id: amithalevi
+    kind: channel
+    handle: "@amithalevi"
+    topics: [Right]
+    language_hint: he
+  - id: akivigman
+    kind: channel
+    handle: "@akivigman"
+    topics: [Right]
+    language_hint: he
+  - id: kalman_liebskind
+    kind: channel
+    handle: "@KalmanLiebskind"
+    topics: [Right, Israel News]
     language_hint: he
